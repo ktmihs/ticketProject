@@ -8,66 +8,92 @@ export interface Env {
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const url = new URL(request.url);
+		const requestOrigin = request.headers.get('Origin') ?? '';
+
+		// 허용된 Origin 목록
+		const allowedOrigins = [
+			env.FRONTEND_URL,
+			'https://your-production-domain.com', // 프로덕션 도메인 추가 시
+		];
+		const origin = allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0];
 
 		if (request.method === 'OPTIONS') {
-			return handleCORS();
+			return handleCORS(origin);
 		}
 
-		if (isCacheable(url.pathname)) {
-			return fetch(request);
-		}
+		const response = await handleRequest(request, env, url);
 
-		const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
-		const rateLimitResult = await checkRateLimit(ip, env.RATE_LIMIT_KV);
-		if (!rateLimitResult.allowed) {
-			return new Response(JSON.stringify({ error: { code: 'RATE_LIMIT_EXCEEDED', message: '요청이 너무 많습니다' } }), {
-				status: 429,
+		// 모든 응답에 CORS 헤더 추가
+		const corsResponse = new Response(response.body, response);
+		corsResponse.headers.set('Access-Control-Allow-Origin', origin);
+		corsResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+		corsResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Queue-Token');
+		corsResponse.headers.set('Access-Control-Allow-Credentials', 'true');
+		return corsResponse;
+	},
+};
+
+async function handleRequest(request: Request, env: Env, url: URL): Promise<Response> {
+	if (isCacheable(url.pathname)) {
+		// fetch(request) 대신 ORIGIN_URL로 프록시
+		const proxied = new Request(`${env.ORIGIN_URL}${url.pathname}${url.search}`, {
+			method: request.method,
+			headers: request.headers,
+			body: null,
+		});
+		return fetch(proxied);
+	}
+
+	const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+	const rateLimitResult = await checkRateLimit(ip, env.RATE_LIMIT_KV);
+	if (!rateLimitResult.allowed) {
+		return new Response(JSON.stringify({ error: { code: 'RATE_LIMIT_EXCEEDED', message: '요청이 너무 많습니다' } }), {
+			status: 429,
+			headers: { 'Content-Type': 'application/json' },
+		});
+	}
+
+	if (isPurchaseRoute(url.pathname)) {
+		const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+
+		if (!token) {
+			return new Response(JSON.stringify({ error: { code: 'NO_TOKEN', message: '대기열 토큰이 없습니다' } }), {
+				status: 401,
 				headers: { 'Content-Type': 'application/json' },
 			});
 		}
 
-		if (isPurchaseRoute(url.pathname)) {
-			const token = request.headers.get('Authorization')?.replace('Bearer ', '');
-
-			if (!token) {
-				return new Response(JSON.stringify({ error: { code: 'NO_TOKEN', message: '대기열 토큰이 없습니다' } }), {
-					status: 401,
-					headers: { 'Content-Type': 'application/json' },
-				});
-			}
-
-			const payload = await verifyJWT(token, env.JWT_SECRET);
-			if (!payload) {
-				return new Response(JSON.stringify({ error: { code: 'INVALID_TOKEN', message: '유효하지 않은 토큰입니다' } }), {
-					status: 401,
-					headers: { 'Content-Type': 'application/json' },
-				});
-			}
-
-			if (payload.status !== 'ALLOWED') {
-				return Response.redirect(`${env.FRONTEND_URL}/queue/${payload.showId}`, 302);
-			}
-
-			const modifiedRequest = new Request(`${env.ORIGIN_URL}${url.pathname}${url.search}`, {
-				method: request.method,
-				headers: {
-					...Object.fromEntries(request.headers),
-					'X-Queue-Token': token,
-					'X-Forwarded-For': ip,
-				},
-				body: ['GET', 'HEAD'].includes(request.method) ? null : request.body,
+		const payload = await verifyJWT(token, env.JWT_SECRET);
+		if (!payload) {
+			return new Response(JSON.stringify({ error: { code: 'INVALID_TOKEN', message: '유효하지 않은 토큰입니다' } }), {
+				status: 401,
+				headers: { 'Content-Type': 'application/json' },
 			});
-			return fetch(modifiedRequest);
 		}
 
-		const proxied = new Request(`${env.ORIGIN_URL}${url.pathname}${url.search}`, {
+		if (payload.status !== 'ALLOWED') {
+			return Response.redirect(`${env.FRONTEND_URL}/queue/${payload.showId}`, 302);
+		}
+
+		const modifiedRequest = new Request(`${env.ORIGIN_URL}${url.pathname}${url.search}`, {
 			method: request.method,
-			headers: request.headers,
+			headers: {
+				...Object.fromEntries(request.headers),
+				'X-Queue-Token': token,
+				'X-Forwarded-For': ip,
+			},
 			body: ['GET', 'HEAD'].includes(request.method) ? null : request.body,
 		});
-		return fetch(proxied);
-	},
-};
+		return fetch(modifiedRequest);
+	}
+
+	const proxied = new Request(`${env.ORIGIN_URL}${url.pathname}${url.search}`, {
+		method: request.method,
+		headers: request.headers,
+		body: ['GET', 'HEAD'].includes(request.method) ? null : request.body,
+	});
+	return fetch(proxied);
+}
 
 function isCacheable(pathname: string): boolean {
 	return pathname === '/api/shows' || pathname.startsWith('/_next/static/');
@@ -111,13 +137,14 @@ async function verifyJWT(token: string, secret: string): Promise<Record<string, 
 	}
 }
 
-function handleCORS(): Response {
+function handleCORS(origin: string): Response {
 	return new Response(null, {
 		status: 204,
 		headers: {
-			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Origin': origin,
 			'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+			'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Queue-Token',
+			'Access-Control-Allow-Credentials': 'true',
 		},
 	});
 }
