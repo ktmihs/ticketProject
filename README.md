@@ -248,9 +248,9 @@ Complete
 
 프로젝트 실행 방법
 
-## 1단계: 환경 설정
+### 1단계: 환경 설정
 
-### Redis 시작
+#### Redis 시작
 
 ```bash
 docker-compose up -d
@@ -259,7 +259,7 @@ docker-compose up -d
 docker ps  # ticket-redis 컨테이너 확인
 ```
 
-## 2단계: 백엔드 실행
+### 2단계: 백엔드 실행
 
 ```bash
 cd backend
@@ -275,7 +275,7 @@ npm run dev
 #   Server running on port 3001
 ```
 
-### Health Check 확인
+#### Health Check 확인
 
 ```bash
 curl http://localhost:3001/health
@@ -288,7 +288,7 @@ curl http://localhost:3001/health
 # }
 ```
 
-## 3단계: 프론트엔드 실행
+### 3단계: 프론트엔드 실행
 
 **새 터미널**
 
@@ -303,9 +303,9 @@ npm run dev
 # - ready started server on 0.0.0.0:3000, url: http://localhost:3000
 ```
 
-## 4단계: 초기 데이터 설정
+### 4단계: 초기 데이터 설정
 
-### Redis CLI 사용
+#### Redis CLI 사용
 
 ```bash
 docker exec -it ticket-redis redis-cli
@@ -318,15 +318,15 @@ SET stock:show_789 10000
 exit
 ```
 
-## 5단계: 서비스 접속
+### 5단계: 서비스 접속
 
-### 프론트엔드
+#### 프론트엔드
 
 ```
 http://localhost:3000
 ```
 
-### 백엔드 API
+#### 백엔드 API
 
 ```
 http://localhost:3001/api
