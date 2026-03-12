@@ -30,22 +30,9 @@ async function verifyQueueToken(req, res, next) {
 			throw Errors.INVALID_TOKEN();
 		}
 
-		// ✅ Redis 대기열 상태 확인
-		const queueStatus = await redisService.getQueueStatus(
-			decoded.showId,
-			decoded.sub,
-		);
-
-		if (!queueStatus) {
+		// ✅ JWT payload에서 ALLOWED 상태 확인 (Redis 이중 검증 불필요 - JWT 서명으로 충분)
+		if (decoded.status !== 'ALLOWED') {
 			throw Errors.QUEUE_NOT_FOUND();
-		}
-
-		if (queueStatus.status !== 'ALLOWED') {
-			throw Errors.QUEUE_NOT_ALLOWED({
-				status: queueStatus.status,
-				position: queueStatus.position,
-				message: '대기열을 통과하지 않았습니다',
-			});
 		}
 
 		// ✅ 검증 통과 - 사용자 정보 설정
