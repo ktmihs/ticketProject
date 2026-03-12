@@ -75,10 +75,13 @@ async function handleRequest(request: Request, env: Env, url: URL): Promise<Resp
 			return Response.redirect(`${env.FRONTEND_URL}/queue/${payload.showId}`, 302);
 		}
 
+		const headers = Object.fromEntries(request.headers);
+		delete headers['x-queue-token']; // 기존 값 제거 후 덮어쓰기
+
 		const modifiedRequest = new Request(`${env.ORIGIN_URL}${url.pathname}${url.search}`, {
 			method: request.method,
 			headers: {
-				...Object.fromEntries(request.headers),
+				...headers,
 				'X-Queue-Token': token,
 				'X-Forwarded-For': ip,
 			},
