@@ -54,7 +54,7 @@ async function handleRequest(request: Request, env: Env, url: URL): Promise<Resp
 	}
 
 	if (isPurchaseRoute(url.pathname)) {
-		const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+		const token = request.headers.get('Authorization')?.replace('Bearer ', '') ?? request.headers.get('X-Queue-Token');
 
 		if (!token) {
 			return new Response(JSON.stringify({ error: { code: 'NO_TOKEN', message: '대기열 토큰이 없습니다' } }), {
