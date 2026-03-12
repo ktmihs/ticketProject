@@ -1,0 +1,11 @@
+name = "ticket-edge"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+ORIGIN_URL = "https://ktmihs-ticket-project.up.railway.app"
+FRONTEND_URL = "http://localhost:3000"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "8d65adbbc363422ea58dddfa6e6565c7"
