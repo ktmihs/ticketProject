@@ -83,7 +83,6 @@ const queueSlice = createSlice({
 			state.allowedUntil = action.payload.allowedUntil;
 			state.isPolling = false;
 			if (typeof window !== 'undefined') {
-				localStorage.setItem('queueToken', action.payload.queueToken);
 				localStorage.setItem(
 					'allowedUntil',
 					action.payload.allowedUntil.toString(),
@@ -107,7 +106,6 @@ const queueSlice = createSlice({
 			if (action.payload.queueToken) {
 				state.queueToken = action.payload.queueToken;
 				if (typeof window !== 'undefined') {
-					localStorage.setItem('queueToken', action.payload.queueToken);
 					if (action.payload.allowedUntil)
 						localStorage.setItem(
 							'allowedUntil',
@@ -124,7 +122,6 @@ const queueSlice = createSlice({
 			state.allowedUntil = null;
 			state.isPolling = false;
 			if (typeof window !== 'undefined') {
-				localStorage.removeItem('queueToken');
 				localStorage.removeItem('allowedUntil');
 			}
 		},
@@ -137,7 +134,6 @@ const queueSlice = createSlice({
 
 		resetQueue: () => {
 			if (typeof window !== 'undefined') {
-				localStorage.removeItem('queueToken');
 				localStorage.removeItem('allowedUntil');
 			}
 			apiClient.clearQueueToken();

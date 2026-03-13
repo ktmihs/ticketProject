@@ -75,23 +75,14 @@ class ApiClient {
 	// Queue Token 관리
 	setQueueToken(token: string) {
 		this.queueToken = token;
-		if (typeof window !== 'undefined') {
-			localStorage.setItem('queueToken', token);
-		}
 	}
 
 	getQueueToken(): string | null {
-		if (!this.queueToken && typeof window !== 'undefined') {
-			this.queueToken = localStorage.getItem('queueToken');
-		}
 		return this.queueToken;
 	}
 
 	clearQueueToken() {
 		this.queueToken = null;
-		if (typeof window !== 'undefined') {
-			localStorage.removeItem('queueToken');
-		}
 	}
 
 	// ==================== 공연 API ====================

@@ -9,7 +9,6 @@ export default function NotFoundCustomPage() {
 	useEffect(() => {
 		// ✨ queueToken 삭제
 		if (typeof window !== 'undefined') {
-			localStorage.removeItem('queueToken');
 			console.log('❌ 404 - queueToken 삭제됨');
 		}
 
@@ -44,7 +43,6 @@ export default function NotFoundCustomPage() {
 				<div className="space-y-3">
 					<button
 						onClick={() => {
-							localStorage.removeItem('queueToken');
 							window.location.href = '/';
 						}}
 						className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-lg"
@@ -58,7 +56,6 @@ export default function NotFoundCustomPage() {
 					<div className="flex gap-2 justify-center text-sm">
 						<button
 							onClick={() => {
-								localStorage.removeItem('queueToken');
 								window.location.href = '/';
 							}}
 							className="text-blue-300 hover:text-blue-200 underline"
