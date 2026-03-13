@@ -29,6 +29,11 @@ export default {
 		corsResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
 		corsResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Queue-Token');
 		corsResponse.headers.set('Access-Control-Allow-Credentials', 'true');
+
+		// ✅ 백엔드의 Set-Cookie를 브라우저로 그대로 전달
+		const setCookie = response.headers.getAll('set-cookie');
+		setCookie.forEach((cookie) => corsResponse.headers.append('set-cookie', cookie));
+
 		return corsResponse;
 	},
 };
