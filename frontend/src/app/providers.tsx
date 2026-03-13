@@ -7,6 +7,21 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { store, persistor } from '@/store';
 import { fetchCurrentUser } from '@/store/authSlice';
 import { useEffect, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+
+// ✅ Provider 안에서 실행되는 컴포넌트로 분리
+function AuthInitializer({ children }: { children: React.ReactNode }) {
+	const dispatch = useAppDispatch();
+	const { isLoading } = useAppSelector(state => state.auth);
+
+	useEffect(() => {
+		dispatch(fetchCurrentUser());
+	}, [dispatch]);
+
+	if (isLoading) return <LoadingFallback />;
+
+	return <>{children}</>;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
 	const [queryClient] = useState(
@@ -21,16 +36,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 			}),
 	);
 
-	useEffect(() => {
-		store.dispatch(fetchCurrentUser()).catch(() => {});
-	}, []);
-
 	return (
 		<Provider store={store}>
-			{/* ✅ PersistGate: Redux 상태 복원 완료 후 렌더링 */}
 			<PersistGate loading={<LoadingFallback />} persistor={persistor}>
 				<QueryClientProvider client={queryClient}>
-					{children}
+					<AuthInitializer>{children}</AuthInitializer>
 					<ReactQueryDevtools initialIsOpen={false} />
 				</QueryClientProvider>
 			</PersistGate>

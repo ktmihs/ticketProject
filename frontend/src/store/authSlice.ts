@@ -14,7 +14,7 @@ const initialState: AuthState = {
 	email: null,
 	role: null,
 	isAuthenticated: false,
-	isLoading: false,
+	isLoading: true,
 };
 
 export const login = createAsyncThunk(
@@ -42,8 +42,8 @@ export const fetchCurrentUser = createAsyncThunk(
 	async (_, { rejectWithValue }) => {
 		try {
 			const response = await apiClient.getMe();
-			if (!response.data) return rejectWithValue(null);
-			return response.data;
+			if (!response) return rejectWithValue(null);
+			return response;
 		} catch {
 			return rejectWithValue(null);
 		}
@@ -69,14 +69,27 @@ const authSlice = createSlice({
 			.addCase(login.rejected, state => {
 				state.isLoading = false;
 			})
-			.addCase(logout.fulfilled, () => initialState)
+			.addCase(logout.fulfilled, state => {
+				state.isLoading = false;
+				state.isAuthenticated = false;
+				state.userId = null;
+				state.email = null;
+				state.role = null;
+			})
 			.addCase(fetchCurrentUser.fulfilled, (state, action) => {
+				state.isLoading = false;
 				state.isAuthenticated = true;
 				state.userId = action.payload.userId;
 				state.email = action.payload.email;
 				state.role = action.payload.role;
 			})
-			.addCase(fetchCurrentUser.rejected, () => initialState);
+			.addCase(fetchCurrentUser.rejected, state => {
+				state.isLoading = false;
+				state.isAuthenticated = false;
+				state.userId = null;
+				state.email = null;
+				state.role = null;
+			});
 	},
 });
 
