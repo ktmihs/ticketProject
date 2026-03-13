@@ -10,6 +10,7 @@ const queueWorker = require('./workers/queue.worker');
 const showRoutes = require('./routes/show.routes');
 const queueRoutes = require('./routes/queue.routes');
 const purchaseRoutes = require('./routes/purchase.routes');
+const authRoutes = require('./routes/auth.routes');
 
 // Middleware
 const {
@@ -68,6 +69,7 @@ app.get('/health', async (req, res) => {
 
 // ==================== API 라우트 ====================
 
+app.use('/api/auth', authRoutes);
 app.use('/api/shows', showRoutes);
 app.use('/api/queue', queueRoutes);
 app.use('/api', purchaseRoutes);

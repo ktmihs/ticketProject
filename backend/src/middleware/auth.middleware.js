@@ -116,8 +116,39 @@ const createRateLimiter = (options = {}) => {
 	});
 };
 
+async function verifyAccessToken(req, res, next) {
+	try {
+		const token = req.cookies?.accessToken;
+
+		if (!token) {
+			throw Errors.NO_TOKEN();
+		}
+
+		let decoded;
+		try {
+			decoded = jwtUtil.verifyToken(token);
+		} catch (error) {
+			if (error.message === 'TOKEN_EXPIRED') {
+				res.clearCookie('accessToken');
+				throw Errors.TOKEN_EXPIRED();
+			}
+			throw Errors.INVALID_TOKEN();
+		}
+
+		// 클라이언트 전달값을 무시하고 서버가 직접 세팅
+		req.userId = decoded.sub;
+		req.userEmail = decoded.email;
+		req.userRole = decoded.role;
+
+		next();
+	} catch (error) {
+		next(error);
+	}
+}
+
 module.exports = {
 	verifyQueueToken,
 	verifyHoldToken,
+	verifyAccessToken,
 	createRateLimiter,
 };

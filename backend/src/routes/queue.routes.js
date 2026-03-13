@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const queueController = require('../controllers/queue.controller');
 const { streamQueueStatus } = require('../controllers/queue.sse.controller');
+const { verifyAccessToken } = require('../middleware/auth.middleware');
 
 // POST /queue/join
-router.post('/join', queueController.joinQueue);
+router.post('/join', verifyAccessToken, queueController.joinQueue);
 
 // GET /queue/status (폴링 방식)
 router.get('/status', queueController.getQueueStatus);
