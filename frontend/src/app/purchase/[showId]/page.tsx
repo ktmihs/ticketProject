@@ -23,6 +23,8 @@ export default function PurchasePageWrapper() {
 	const router = useRouter();
 	const selectedShow = useAppSelector(state => state.purchase.selectedShow);
 
+	if (!selectedShow) return null;
+
 	useEffect(() => {
 		// 새로고침: selectedShow 없으면 홈으로
 		if (!selectedShow) {
@@ -69,6 +71,8 @@ function PurchasePage() {
 		isProcessing,
 		error,
 	} = useAppSelector(state => state.purchase);
+
+	if (!selectedShow) return null;
 
 	const { allowedUntil } = useAppSelector(state => state.queue);
 
