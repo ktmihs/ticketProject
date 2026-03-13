@@ -42,7 +42,14 @@ app.use(cookieParser());
 // Request Logging (개발 환경)
 if (config.nodeEnv === 'development') {
 	app.use((req, res, next) => {
-		console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+		console.log(`[dev: ${new Date().toISOString()}] ${req.method} ${req.path}`);
+		next();
+	});
+} else {
+	app.use((req, res, next) => {
+		console.log(
+			`[prod: ${new Date().toISOString()}] ${req.method} ${req.path}`,
+		);
 		next();
 	});
 }
