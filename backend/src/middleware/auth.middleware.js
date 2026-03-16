@@ -38,6 +38,8 @@ async function verifyQueueToken(req, res, next) {
 		// ✅ 검증 통과 - 사용자 정보 설정
 		req.userId = decoded.sub;
 		req.showId = decoded.showId;
+		req.queueToken = token;
+		req.tokenExpiresAt = decoded.exp * 1000;
 
 		next();
 	} catch (error) {
@@ -142,7 +144,6 @@ async function verifyAccessToken(req, res, next) {
 		// 클라이언트 전달값을 무시하고 서버가 직접 세팅
 		req.userId = decoded.sub;
 		req.userEmail = decoded.email;
-		req.queueToken = token;
 		req.userRole = decoded.role;
 
 		next();
