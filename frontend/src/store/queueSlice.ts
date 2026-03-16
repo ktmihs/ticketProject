@@ -149,6 +149,7 @@ const queueSlice = createSlice({
 				state.isPolling = false;
 			})
 			.addCase(joinQueue.fulfilled, (state, action) => {
+				if (state.status === 'IDLE') return;
 				if (action.payload.status === 'ALLOWED') {
 					state.status = 'ALLOWED';
 					const allowedUntil = Date.now() + 10 * 60 * 1000;

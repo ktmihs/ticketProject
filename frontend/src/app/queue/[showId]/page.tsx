@@ -30,6 +30,7 @@ export default function QueuePage() {
 	const [isClient, setIsClient] = useState(false);
 	const [reconnectAttempts, setReconnectAttempts] = useState(0);
 	const reconnectRef = useRef(0);
+	const pushStateRef = useRef(false); // ✅ pushState 중복 방지
 
 	useEffect(() => {
 		setIsClient(true);
@@ -78,7 +79,6 @@ export default function QueuePage() {
 						}),
 					);
 					eventSource.close();
-					router.replace(`/purchase/${showId}`);
 				} else if (data.status === 'EXPIRED') {
 					dispatch(setExpired());
 					eventSource.close();
@@ -159,13 +159,18 @@ export default function QueuePage() {
 				'대기열에서 나가시겠습니까?\n순번이 초기화됩니다.',
 			);
 			if (ok) {
+				pushStateRef.current = false;
 				dispatch(resetQueue());
 				router.replace('/');
 			} else {
 				window.history.pushState(null, '', window.location.href);
 			}
 		};
-		window.history.pushState(null, '', window.location.href);
+		// ✅ 처음 한 번만 pushState
+		if (!pushStateRef.current) {
+			window.history.pushState(null, '', window.location.href);
+			pushStateRef.current = true;
+		}
 		window.addEventListener('popstate', handler);
 		return () => window.removeEventListener('popstate', handler);
 	}, [isClient, status]);

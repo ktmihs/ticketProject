@@ -18,14 +18,20 @@ import authReducer from './authSlice';
 const queuePersistConfig = {
 	key: 'queue',
 	storage,
-	whitelist: ['allowedUntil', 'showId'],
+	whitelist: [],
+};
+
+const purchasePersistConfig = {
+	key: 'purchase',
+	storage,
+	whitelist: ['selectedShow', 'quantity'],
 };
 
 // purchase: persist 안 함 (새로고침 시 구매 진행 상태 초기화가 맞음)
 const rootReducer = combineReducers({
 	auth: authReducer,
 	queue: persistReducer(queuePersistConfig, queueReducer),
-	purchase: purchaseReducer,
+	purchase: persistReducer(purchasePersistConfig, purchaseReducer),
 });
 
 const persistedReducer = rootReducer;

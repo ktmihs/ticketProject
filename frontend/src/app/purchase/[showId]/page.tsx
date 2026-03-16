@@ -18,10 +18,15 @@ import type { Seat } from '@/types';
 // =====================================================
 export default function PurchasePageWrapper() {
 	const router = useRouter();
+	const [isClient, setIsClient] = useState(false);
 	const selectedShow = useAppSelector(state => state.purchase.selectedShow);
 
 	useEffect(() => {
-		// 새로고침: selectedShow 없으면 홈으로
+		setIsClient(true);
+	}, []);
+
+	useEffect(() => {
+		if (!isClient) return;
 		if (!selectedShow) {
 			router.replace('/');
 			return;
@@ -34,9 +39,9 @@ export default function PurchasePageWrapper() {
 		window.addEventListener('auth:unauthorized', handleUnauthorized);
 		return () =>
 			window.removeEventListener('auth:unauthorized', handleUnauthorized);
-	}, [selectedShow, router]);
+	}, [isClient, selectedShow, router]);
 
-	if (!selectedShow) return null;
+	if (!isClient || !selectedShow) return null;
 	return <PurchasePage />;
 }
 
@@ -97,6 +102,25 @@ function PurchasePage() {
 		};
 		window.addEventListener('beforeunload', handler);
 		return () => window.removeEventListener('beforeunload', handler);
+	}, []);
+
+	// ✅ 뒤로가기 처리
+	useEffect(() => {
+		const handler = () => {
+			const ok = window.confirm(
+				'구매를 취소하시겠습니까?\n메인 페이지로 이동합니다.',
+			);
+			if (ok) {
+				dispatch(returnToSeatSelect());
+				dispatch(resetQueue());
+				router.replace('/');
+			} else {
+				window.history.pushState(null, '', window.location.href);
+			}
+		};
+		window.history.pushState(null, '', window.location.href);
+		window.addEventListener('popstate', handler);
+		return () => window.removeEventListener('popstate', handler);
 	}, []);
 
 	// ✅ 좌석 선택 — API 호출 없이 Redux state만 업데이트

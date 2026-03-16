@@ -16,15 +16,21 @@ type PaymentMethod = 'card' | 'bank';
 
 export default function CheckoutPageWrapper() {
 	const router = useRouter();
+	const [isClient, setIsClient] = useState(false);
 	const selectedShow = useAppSelector(state => state.purchase.selectedShow);
 
 	useEffect(() => {
+		setIsClient(true);
+	}, []);
+
+	useEffect(() => {
+		if (!isClient) return;
 		if (!selectedShow) {
 			router.replace('/');
 		}
-	}, [selectedShow, router]);
+	}, [isClient, selectedShow, router]);
 
-	if (!selectedShow) return null;
+	if (!isClient || !selectedShow) return null;
 	return <CheckoutPage />;
 }
 
@@ -74,7 +80,6 @@ function CheckoutPage() {
 				window.history.pushState(null, '', window.location.href);
 			}
 		};
-		window.history.pushState(null, '', window.location.href);
 		window.addEventListener('popstate', handlePopState);
 		return () => window.removeEventListener('popstate', handlePopState);
 	}, [showId, dispatch, router]);
