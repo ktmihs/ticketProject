@@ -291,6 +291,20 @@ class RedisService {
 		await this.client.setex(cacheKey, 5, JSON.stringify(seats));
 	}
 
+	// ==================== 블랙리스트 ====================
+
+	// queueToken 블랙리스트 등록
+	async addToBlacklist(token, expiresAt) {
+		const ttl = Math.max(1, Math.floor((expiresAt - Date.now()) / 1000));
+		await this.client.set(`blacklist:${token}`, '1', 'EX', ttl);
+	}
+
+	// 블랙리스트 확인
+	async isBlacklisted(token) {
+		const result = await this.client.get(`blacklist:${token}`);
+		return result !== null;
+	}
+
 	// ==================== 유틸리티 ====================
 
 	/**

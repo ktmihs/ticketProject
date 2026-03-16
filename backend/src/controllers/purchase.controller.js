@@ -148,6 +148,9 @@ async function purchaseNonReserved(req, res, next) {
 			throw Errors.PAYMENT_FAILED('결제 승인 실패');
 		}
 
+		// ✅ 구매 완료 후 queueToken 블랙리스트 등록
+		await redisService.addToBlacklist(req.queueToken, req.tokenExpiresAt);
+
 		// 구매 완료
 		const response = createSuccessResponse({
 			purchaseId: result.purchaseId,
@@ -353,6 +356,9 @@ async function purchaseReserved(req, res, next) {
 		// Redis hold 정리
 		await redisService.releaseHold(userId, showId);
 
+		// ✅ 구매 완료 후 queueToken 블랙리스트 등록
+		await redisService.addToBlacklist(req.queueToken, req.tokenExpiresAt);
+
 		const purchaseId = `purchase_${Date.now()}_${userId}`;
 
 		const response = createSuccessResponse({
@@ -416,11 +422,11 @@ async function releaseSeat(req, res, next) {
  * 프로덕션: 실제 PG사 API 연동 필요
  */
 async function mockPaymentProcess(payment) {
-  if (process.env.NODE_ENV !== 'production') {
-    return true; // 개발/테스트 환경: 항상 성공
-  }
-  // 실제로는 PG사 API 호출
-  return Math.random() > 0.05; // 프로덕션: 95% 성공률
+	if (process.env.NODE_ENV !== 'production') {
+		return true; // 개발/테스트 환경: 항상 성공
+	}
+	// 실제로는 PG사 API 호출
+	return Math.random() > 0.05; // 프로덕션: 95% 성공률
 }
 
 module.exports = {

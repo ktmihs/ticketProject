@@ -135,9 +135,14 @@ async function verifyAccessToken(req, res, next) {
 			throw Errors.INVALID_TOKEN();
 		}
 
+		// ✅ 블랙리스트 확인
+		const blacklisted = await redisService.isBlacklisted(token);
+		if (blacklisted) throw Errors.INVALID_TOKEN();
+
 		// 클라이언트 전달값을 무시하고 서버가 직접 세팅
 		req.userId = decoded.sub;
 		req.userEmail = decoded.email;
+		req.queueToken = token;
 		req.userRole = decoded.role;
 
 		next();
