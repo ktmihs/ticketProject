@@ -137,12 +137,15 @@ function PurchasePage() {
 		if (seat.status === 'HOLDING' || seat.status === 'SOLD') return;
 		if (selectedSeat?.id === seat.id) return;
 
+		dispatch(selectSeat({ ...seat }));
+
 		try {
 			const result = await dispatch(
 				holdSeat({ showId, seatId: seat.id }),
 			).unwrap();
 			dispatch(selectSeat({ ...seat, ...result.seat }));
 		} catch (err: any) {
+			dispatch(returnToSeatSelect());
 			alert(err.message || '좌석 선점에 실패했습니다.');
 		}
 	};
