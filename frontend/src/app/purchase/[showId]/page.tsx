@@ -6,9 +6,6 @@ import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { resetQueue } from '@/store/queueSlice';
 import {
 	selectSeat,
-	holdSeat,
-	purchaseReserved,
-	purchaseNonReserved,
 	returnToSeatSelect,
 	setQuantity,
 } from '@/store/purchaseSlice';
@@ -22,8 +19,6 @@ import type { Seat } from '@/types';
 export default function PurchasePageWrapper() {
 	const router = useRouter();
 	const selectedShow = useAppSelector(state => state.purchase.selectedShow);
-
-	if (!selectedShow) return null;
 
 	useEffect(() => {
 		// 새로고침: selectedShow 없으면 홈으로
@@ -62,26 +57,18 @@ function PurchasePage() {
 	const dispatch = useAppDispatch();
 	const showId = params.showId as string;
 
-	const {
-		selectedShow,
-		selectedSeat,
-		holdToken,
-		holdExpiresAt,
-		quantity,
-		isProcessing,
-		error,
-	} = useAppSelector(state => state.purchase);
+	const { selectedShow, selectedSeat, quantity } = useAppSelector(
+		state => state.purchase,
+	);
 
 	if (!selectedShow) return null;
 
 	const { allowedUntil } = useAppSelector(state => state.queue);
-
-	const [remainingSeconds, setRemainingSeconds] = useState(0);
 	const [queueRemainingSeconds, setQueueRemainingSeconds] = useState(0);
 
 	// 좌석 배치도 데이터 (reserved 공연만)
 	const { data: seatData, isLoading: seatsLoading } = useSeats(
-		selectedShow?.seatType === 'reserved' ? showId : null,
+		selectedShow.seatType === 'reserved' ? showId : null,
 	);
 
 	// 구매 가능 시간 타이머
@@ -102,88 +89,26 @@ function PurchasePage() {
 		return () => clearInterval(timer);
 	}, [allowedUntil]);
 
-	// 좌석 HOLD 타이머
-	useEffect(() => {
-		if (!holdExpiresAt) return;
-
-		const timer = setInterval(() => {
-			const remaining = Math.max(
-				0,
-				Math.floor((holdExpiresAt - Date.now()) / 1000),
-			);
-			setRemainingSeconds(remaining);
-			if (remaining === 0) {
-				alert('좌석 선택 시간이 만료되었습니다.');
-				dispatch(returnToSeatSelect());
-			}
-		}, 1000);
-
-		return () => clearInterval(timer);
-	}, [holdExpiresAt, dispatch]);
-
+	// 페이지 이탈 경고
 	useEffect(() => {
 		const handler = (e: BeforeUnloadEvent) => {
-			if (selectedSeat) {
-				e.preventDefault();
-				e.returnValue = '선택한 좌석이 해제됩니다.';
-			}
+			e.preventDefault();
+			e.returnValue = '페이지를 벗어나면 선택한 좌석이 해제됩니다.';
 		};
 		window.addEventListener('beforeunload', handler);
 		return () => window.removeEventListener('beforeunload', handler);
-	}, [selectedSeat]);
+	}, []);
 
-	// ✅ 좌석 선택 (실제 seatId 사용)
-	const handleSeatSelect = async (seat: Seat) => {
+	// ✅ 좌석 선택 — API 호출 없이 Redux state만 업데이트
+	const handleSeatSelect = (seat: Seat) => {
 		if (seat.status === 'HOLDING' || seat.status === 'SOLD') return;
 		if (selectedSeat?.id === seat.id) return;
-
 		dispatch(selectSeat({ ...seat }));
-
-		try {
-			const result = await dispatch(
-				holdSeat({ showId, seatId: seat.id }),
-			).unwrap();
-			dispatch(selectSeat({ ...seat, ...result.seat }));
-		} catch (err: any) {
-			dispatch(returnToSeatSelect());
-			alert(err.message || '좌석 선점에 실패했습니다.');
-		}
 	};
 
-	const handlePurchase = async () => {
-		if (!selectedShow) return;
-
-		try {
-			if (selectedShow.seatType === 'reserved' && holdToken) {
-				await dispatch(
-					purchaseReserved({
-						holdToken,
-						payment: {
-							cardNumber: '1234-5678-9012-3456',
-							expiryDate: '12/28',
-							cvv: '123',
-							cardHolder: 'Test User',
-						},
-					}),
-				).unwrap();
-			} else {
-				await dispatch(
-					purchaseNonReserved({
-						showId,
-						quantity,
-						payment: {
-							cardNumber: '1234-5678-9012-3456',
-							expiryDate: '12/28',
-							cvv: '123',
-							cardHolder: 'Test User',
-						},
-					}),
-				).unwrap();
-			}
-			router.push('/success');
-		} catch (err: any) {
-			alert(err.message || '구매에 실패했습니다.');
-		}
+	// ✅ 결제 버튼 — /checkout으로 이동
+	const handlePurchase = () => {
+		router.push(`/checkout/${showId}`);
 	};
 
 	const formatTime = (seconds: number) => {
@@ -191,11 +116,6 @@ function PurchasePage() {
 		const sec = seconds % 60;
 		return `${min}:${sec.toString().padStart(2, '0')}`;
 	};
-
-	// 좌석 등급 목록 (중복 제거)
-	const grades = seatData?.seats
-		? [...new Set(seatData.seats.map((s: Seat) => s.grade))]
-		: [];
 
 	// 열(row) 목록
 	const rows = seatData?.seats
@@ -339,13 +259,6 @@ function PurchasePage() {
 											{selectedSeat.grade}석 ·{' '}
 											{selectedSeat.price?.toLocaleString()}원
 										</p>
-										{holdExpiresAt && (
-											<p
-												className={`text-sm mt-1 font-semibold ${remainingSeconds < 60 ? 'text-red-600 animate-pulse' : 'text-orange-600'}`}
-											>
-												선점 유지 시간: {formatTime(remainingSeconds)}
-											</p>
-										)}
 									</div>
 									<button
 										onClick={() => dispatch(returnToSeatSelect())}
@@ -397,32 +310,18 @@ function PurchasePage() {
 					</div>
 				)}
 
-				{/* 결제 버튼 */}
+				{/* 결제 버튼 — /checkout으로 이동 */}
 				{(selectedShow.seatType === 'non_reserved' || selectedSeat) && (
 					<button
 						onClick={handlePurchase}
-						disabled={isProcessing}
-						className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+						className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition-colors"
 					>
-						{isProcessing ? (
-							<span className="flex items-center justify-center gap-2">
-								<span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full inline-block"></span>
-								결제 처리 중...
-							</span>
-						) : (
-							`결제하기 (${
-								selectedShow.seatType === 'reserved'
-									? (selectedSeat?.price ?? 0).toLocaleString()
-									: ((selectedShow.price.min ?? 0) * quantity).toLocaleString()
-							}원)`
-						)}
+						결제하기 (
+						{selectedShow.seatType === 'reserved'
+							? (selectedSeat?.price ?? 0).toLocaleString()
+							: ((selectedShow.price.min ?? 0) * quantity).toLocaleString()}
+						원)
 					</button>
-				)}
-
-				{error && (
-					<div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
-						{error}
-					</div>
 				)}
 			</div>
 		</div>

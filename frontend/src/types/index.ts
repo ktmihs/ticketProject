@@ -182,8 +182,6 @@ export interface PurchaseState {
 	stage: PurchaseStage;
 	selectedShow: Show | null;
 	selectedSeat: Seat | null;
-	holdToken: string | null;
-	holdExpiresAt: number | null;
 	quantity: number;
 	totalAmount: number;
 	error: string | null;

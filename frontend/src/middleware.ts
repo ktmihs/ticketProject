@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // 보호할 경로
-const protectedRoutes = ['/purchase', '/queue', '/success'];
+const protectedRoutes = ['/purchase', '/queue', '/success', '/checkout'];
 
 // 로그인 상태에서 접근 불필요한 경로
 const authRoutes = ['/login'];
@@ -29,5 +29,11 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-	matcher: ['/purchase/:path*', '/queue/:path*', '/success', '/login'],
+	matcher: [
+		'/purchase/:path*',
+		'/queue/:path*',
+		'/success',
+		'/checkout',
+		'/login',
+	],
 };
