@@ -30,6 +30,7 @@ export interface Show {
 		vip?: number;
 		r?: number;
 		s?: number;
+		a?: number;
 	};
 	availability: {
 		total: number;
