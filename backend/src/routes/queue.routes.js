@@ -14,6 +14,6 @@ router.get('/status', queueController.getQueueStatus);
 router.get('/stream/:showId', streamQueueStatus);
 
 // POST /queue/allow (관리자용 / 워커 직접 호출)
-router.post('/allow', queueController.allowNextInQueue);
+router.post('/allow', verifyAdminRole, queueController.allowNextInQueue);
 
 module.exports = router;

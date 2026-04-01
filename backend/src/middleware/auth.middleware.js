@@ -152,9 +152,17 @@ async function verifyAccessToken(req, res, next) {
 	}
 }
 
+function verifyAdminRole(req, res, next) {
+	if (req.userRole !== 'admin') {
+		return next(Errors.FORBIDDEN('관리자만 접근할 수 있습니다'));
+	}
+	next();
+}
+
 module.exports = {
 	verifyQueueToken,
 	verifyHoldToken,
 	verifyAccessToken,
 	createRateLimiter,
+	verifyAdminRole,
 };
