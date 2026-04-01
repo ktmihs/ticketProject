@@ -89,7 +89,7 @@ async function getQueueStatus(req, res, next) {
 			throw Errors.INVALID_QUEUE_TOKEN();
 		}
 
-		const decoded = jwtUtil.verifyToken(token);
+		const decoded = jwtUtil.verifyQueueToken(token);
 		const { sub: userId, showId } = decoded;
 
 		const status = await redisService.getQueueStatus(showId, userId);

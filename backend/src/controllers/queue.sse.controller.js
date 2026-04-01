@@ -22,7 +22,7 @@ async function streamQueueStatus(req, res) {
 
 	let decoded;
 	try {
-		decoded = jwtUtil.verifyToken(token);
+		decoded = jwtUtil.verifyQueueToken(token);
 	} catch (err) {
 		res.status(401).json({
 			error: { code: 'INVALID_TOKEN', message: '유효하지 않은 토큰입니다' },

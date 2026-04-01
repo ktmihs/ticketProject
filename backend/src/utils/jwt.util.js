@@ -19,7 +19,7 @@ class JWTService {
 				status: payload.status || 'WAITING',
 				...(payload.allowedUntil && { allowedUntil: payload.allowedUntil }),
 			},
-			config.jwt.secret,
+			config.jwt.queueSecret,
 			{
 				expiresIn,
 			},
@@ -41,7 +41,7 @@ class JWTService {
 				seatId: payload.seatId,
 				expiresAt,
 			},
-			config.jwt.secret,
+			config.jwt.holdSecret,
 			{
 				expiresIn: `${config.queue.holdTimeoutSeconds}s`,
 			},
@@ -60,7 +60,7 @@ class JWTService {
 				email: payload.email,
 				role: payload.role || 'user',
 			},
-			config.jwt.secret,
+			config.jwt.accessSecret,
 			{
 				expiresIn: config.jwt.expiresIn,
 			},
@@ -78,7 +78,7 @@ class JWTService {
 				sub: payload.userId,
 				type: 'refresh',
 			},
-			config.jwt.secret,
+			config.jwt.refreshSecret,
 			{
 				expiresIn: config.jwt.refreshExpiresIn,
 			},
@@ -86,14 +86,39 @@ class JWTService {
 	}
 
 	/**
-	 * 토큰 검증
-	 * @param {string} token - JWT 토큰
-	 * @returns {Object} - 디코딩된 payload
-	 * @throws {Error} - 토큰이 유효하지 않으면 예외 발생
+	 * Access Token 검증
 	 */
-	verifyToken(token) {
+	verifyAccessToken(token) {
+		return this.verifyToken(token, config.jwt.accessSecret);
+	}
+
+	/**
+	 * Refresh Token 검증
+	 */
+	verifyRefreshToken(token) {
+		return this.verifyToken(token, config.jwt.refreshSecret);
+	}
+
+	/**
+	 * Queue Token 검증
+	 */
+	verifyQueueToken(token) {
+		return this.verifyToken(token, config.jwt.queueSecret);
+	}
+
+	/**
+	 * Hold Token 검증
+	 */
+	verifyHoldToken(token) {
+		return this.verifyToken(token, config.jwt.holdSecret);
+	}
+
+	/**
+	 * 내부 공통 검증 로직
+	 */
+	verifyToken(token, secret) {
 		try {
-			return jwt.verify(token, config.jwt.secret);
+			return jwt.verify(token, secret);
 		} catch (error) {
 			if (error.name === 'TokenExpiredError') {
 				throw new Error('TOKEN_EXPIRED');
@@ -113,7 +138,7 @@ class JWTService {
 	decodeToken(token) {
 		try {
 			return jwt.decode(token);
-		} catch (error) {
+		} catch {
 			return null;
 		}
 	}

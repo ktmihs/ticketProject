@@ -33,7 +33,10 @@ npm start
 PORT=3001
 REDIS_HOST=railway에 올라가있는 radis 주소 or localhost
 REDIS_PORT=railway에 올라가있는 radis 포트 or 6379
-JWT_SECRET=본인의 JWT secret
+JWT_ACCESS_SECRET=본인의 ACCESS JWT secret
+JWT_REFRESH_SECRET=본인의 REFRESH JWT secret
+JWT_QUEUE_SECRET=본인의 JWT QUEUE secret
+JWT_HOLD_SECRET=본인의 JWT HOLD secret
 FRONTEND_URL=http://localhost:3000
 RATE_LIMIT_MAX_REQUESTS=10 (분당 10회 요청으로 제어하여 매크로 다량 요청 방지)
 ```

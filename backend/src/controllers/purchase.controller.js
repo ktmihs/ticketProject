@@ -313,7 +313,7 @@ async function purchaseReserved(req, res, next) {
 		// Hold Token 검증
 		let decoded;
 		try {
-			decoded = jwtUtil.verifyToken(holdToken);
+			decoded = jwtUtil.verifyHoldToken(holdToken);
 		} catch (error) {
 			if (error.message === 'TOKEN_EXPIRED') {
 				throw Errors.HOLD_TOKEN_EXPIRED();

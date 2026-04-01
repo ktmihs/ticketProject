@@ -22,7 +22,7 @@ async function verifyQueueToken(req, res, next) {
 		// ✅ JWT 서명 검증 (위변조 방지)
 		let decoded;
 		try {
-			decoded = jwtUtil.verifyToken(token);
+			decoded = jwtUtil.verifyQueueToken(token);
 		} catch (error) {
 			if (error.message === 'TOKEN_EXPIRED') {
 				throw Errors.TOKEN_EXPIRED();
@@ -66,7 +66,7 @@ async function verifyHoldToken(req, res, next) {
 		// ✅ JWT 서명 검증
 		let decoded;
 		try {
-			decoded = jwtUtil.verifyToken(token);
+			decoded = jwtUtil.verifyHoldToken(token);
 		} catch (error) {
 			if (error.message === 'TOKEN_EXPIRED') {
 				throw Errors.HOLD_EXPIRED();
@@ -128,7 +128,7 @@ async function verifyAccessToken(req, res, next) {
 
 		let decoded;
 		try {
-			decoded = jwtUtil.verifyToken(token);
+			decoded = jwtUtil.verifyAccessToken(token);
 		} catch (error) {
 			if (error.message === 'TOKEN_EXPIRED') {
 				res.clearCookie('accessToken');

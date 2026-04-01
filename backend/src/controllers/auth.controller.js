@@ -54,7 +54,7 @@ async function getMe(req, res, next) {
 
 		let decoded;
 		try {
-			decoded = jwtUtil.verifyToken(token);
+			decoded = jwtUtil.verifyAccessToken(token);
 		} catch {
 			// 토큰 만료/위조 시에도 조용히 null 반환
 			res.clearCookie('accessToken');
