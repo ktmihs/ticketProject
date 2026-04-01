@@ -35,6 +35,10 @@ async function verifyQueueToken(req, res, next) {
 			throw Errors.QUEUE_NOT_FOUND();
 		}
 
+		// 블랙리스트 확인 (구매 완료된 토큰 재사용 방지)
+		const blacklisted = await redisService.isBlacklisted(token);
+		if (blacklisted) throw Errors.INVALID_TOKEN();
+
 		// ✅ 검증 통과 - 사용자 정보 설정
 		req.userId = decoded.sub;
 		req.showId = decoded.showId;

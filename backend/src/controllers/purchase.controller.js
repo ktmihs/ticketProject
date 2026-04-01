@@ -123,6 +123,12 @@ async function purchaseNonReserved(req, res, next) {
 			throw Errors.INVALID_QUANTITY(1, 4);
 		}
 
+		// 구매 처리 중 락 획득 (동시 요청 중복 구매 방지)
+		const lockAcquired = await redisService.acquirePurchaseLock(req.queueToken);
+		if (!lockAcquired) {
+			throw Errors.ALREADY_PURCHASED();
+		}
+
 		// Redis 원자적 구매
 		const result = await redisService.purchaseNonReserved(
 			showId,
@@ -143,8 +149,9 @@ async function purchaseNonReserved(req, res, next) {
 		const paymentSuccess = await mockPaymentProcess(payment);
 
 		if (!paymentSuccess) {
-			// 결제 실패 시 재고 복구
+			// 결제 실패 시 재고 복구 + 락 해제 (재시도 가능하도록)
 			await redisService.cancelPurchase(showId, userId, quantity);
+			await redisService.releasePurchaseLock(req.queueToken);
 			throw Errors.PAYMENT_FAILED('결제 승인 실패');
 		}
 
@@ -310,6 +317,12 @@ async function purchaseReserved(req, res, next) {
 			});
 		}
 
+		// 구매 처리 중 락 획득 (동시 요청 중복 구매 방지)
+		const lockAcquired = await redisService.acquirePurchaseLock(req.queueToken);
+		if (!lockAcquired) {
+			throw Errors.ALREADY_PURCHASED();
+		}
+
 		// Hold Token 검증
 		let decoded;
 		try {
@@ -345,6 +358,8 @@ async function purchaseReserved(req, res, next) {
 		const paymentSuccess = await mockPaymentProcess(payment);
 
 		if (!paymentSuccess) {
+			// 결제 실패 시 락 해제 (재시도 가능하도록)
+			await redisService.releasePurchaseLock(req.queueToken);
 			throw Errors.PAYMENT_FAILED('결제 승인 실패');
 		}
 

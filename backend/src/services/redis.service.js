@@ -305,6 +305,32 @@ class RedisService {
 		return result !== null;
 	}
 
+	// ==================== 구매 락 ====================
+
+	/**
+	 * 구매 처리 중 락 획득 (SET NX)
+	 * - 동일 토큰으로 동시 요청 시 중복 구매 방지
+	 * @param {string} token - Queue Token
+	 * @param {number} ttlSeconds - 락 유지 시간 (결제 타임아웃 기준)
+	 * @returns {Promise<boolean>} - true: 락 획득 성공, false: 이미 처리 중
+	 */
+	async acquirePurchaseLock(token, ttlSeconds = 30) {
+		const lockKey = `purchase:lock:${token}`;
+		// SET NX EX — 키가 없을 때만 세팅, TTL 설정
+		const result = await this.client.set(lockKey, '1', 'NX', 'EX', ttlSeconds);
+		return result === 'OK';
+	}
+
+	/**
+	 * 구매 처리 락 해제
+	 * - 결제 실패 시 재시도 가능하도록 락 해제
+	 * @param {string} token - Queue Token
+	 */
+	async releasePurchaseLock(token) {
+		const lockKey = `purchase:lock:${token}`;
+		await this.client.del(lockKey);
+	}
+
 	// ==================== 유틸리티 ====================
 
 	/**
