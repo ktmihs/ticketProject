@@ -1,7 +1,7 @@
 export interface Env {
 	ORIGIN_URL: string;
 	FRONTEND_URL: string;
-	JWT_SECRET: string;
+	JWT_QUEUE_SECRET: string;
 	RATE_LIMIT_KV: KVNamespace;
 }
 
@@ -68,7 +68,7 @@ async function handleRequest(request: Request, env: Env, url: URL): Promise<Resp
 			});
 		}
 
-		const payload = await verifyJWT(token, env.JWT_SECRET);
+		const payload = await verifyJWT(token, env.JWT_QUEUE_SECRET);
 		if (!payload) {
 			return new Response(JSON.stringify({ error: { code: 'INVALID_TOKEN', message: '유효하지 않은 토큰입니다' } }), {
 				status: 401,
