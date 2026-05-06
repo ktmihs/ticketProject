@@ -102,6 +102,11 @@ const purchaseSlice = createSlice({
 			state.stage = 'SEAT_SELECT';
 			state.selectedSeat = null;
 		},
+		expireHold: state => {
+			state.stage = 'SEAT_SELECT';
+			state.selectedSeat = null;
+			state.error = '좌석 선점 시간이 만료되었습니다. 다시 선택해주세요';
+		},
 		resetPurchase: () => initialState,
 		clearError: state => {
 			state.error = null;
@@ -167,6 +172,7 @@ export const {
 	setQuantity,
 	proceedToPayment,
 	returnToSeatSelect,
+	expireHold,
 	resetPurchase,
 	clearError,
 } = purchaseSlice.actions;
