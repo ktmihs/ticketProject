@@ -116,7 +116,7 @@ async function checkRateLimit(ip: string, kv: KVNamespace): Promise<{ allowed: b
 	const current = await kv.get(key);
 	const count = current ? parseInt(current) : 0;
 
-	if (count >= 10) return { allowed: false };
+	if (count >= 100) return { allowed: false };
 
 	await kv.put(key, String(count + 1), { expirationTtl: 60 });
 	return { allowed: true };
