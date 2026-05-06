@@ -5,12 +5,12 @@ services:
     image: redis:7-alpine
     container_name: ticket-redis
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -21,13 +21,16 @@ services:
       dockerfile: Dockerfile
     container_name: ticket-backend
     ports:
-      - "3001:3001"
+      - '3001:3001'
     environment:
       - NODE_ENV=development
       - PORT=3001
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - JWT_SECRET=your-secret-key-change-in-production
+      - JWT_ACCESS_SECRET=dev-access-secret-change-in-production
+      - JWT_REFRESH_SECRET=dev-refresh-secret-change-in-production
+      - JWT_QUEUE_SECRET=dev-queue-secret-change-in-production
+      - JWT_HOLD_SECRET=dev-hold-secret-change-in-production
       - FRONTEND_URL=http://localhost:3000
     depends_on:
       redis:
@@ -39,7 +42,7 @@ services:
       dockerfile: Dockerfile
     container_name: ticket-frontend
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:3001/api
     depends_on:
