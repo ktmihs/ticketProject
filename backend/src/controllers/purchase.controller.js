@@ -155,8 +155,11 @@ async function purchaseNonReserved(req, res, next) {
 			throw Errors.PAYMENT_FAILED('결제 승인 실패');
 		}
 
-		// ✅ 구매 완료 후 queueToken 블랙리스트 등록
-		await redisService.addToBlacklist(req.queueToken, req.tokenExpiresAt);
+		// ✅ 구매 완료 후 queueToken 블랙리스트 등록 + 활성 세션 해제
+		await Promise.all([
+			redisService.addToBlacklist(req.queueToken, req.tokenExpiresAt),
+			redisService.clearActiveSession(userId),
+		]);
 
 		// 구매 완료
 		const response = createSuccessResponse({
@@ -371,8 +374,11 @@ async function purchaseReserved(req, res, next) {
 		// Redis hold 정리
 		await redisService.releaseHold(userId, showId);
 
-		// ✅ 구매 완료 후 queueToken 블랙리스트 등록
-		await redisService.addToBlacklist(req.queueToken, req.tokenExpiresAt);
+		// ✅ 구매 완료 후 queueToken 블랙리스트 등록 + 활성 세션 해제
+		await Promise.all([
+			redisService.addToBlacklist(req.queueToken, req.tokenExpiresAt),
+			redisService.clearActiveSession(userId),
+		]);
 
 		const purchaseId = `purchase_${Date.now()}_${userId}`;
 

@@ -19,7 +19,15 @@ async function joinQueue(req, res, next) {
 		const existingStatus = await redisService.getQueueStatus(showId, userId);
 
 		if (existingStatus.status === 'ALLOWED') {
-			// 이미 허용된 상태
+			// 다른 기기에서 이미 구매 진행 중인지 확인
+			const sessionActive = await redisService.hasActiveSession(userId);
+			if (sessionActive) {
+				throw Errors.FORBIDDEN('다른 기기에서 이미 구매가 진행 중입니다');
+			}
+
+			// 활성 세션 등록 (ALLOWED TTL 10분과 동일)
+			await redisService.setActiveSession(userId, 600);
+
 			const queueToken = jwtUtil.generateQueueToken({
 				userId,
 				showId,
