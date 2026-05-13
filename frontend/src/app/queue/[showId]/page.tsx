@@ -10,12 +10,15 @@ import {
 	setError,
 	resetQueue,
 } from '@/store/queueSlice';
+import { useTabSync } from '@/hooks/useTabSync';
+import { TabBlockOverlay } from '@/components/TabBlockOverlay';
 
 export default function QueuePage() {
 	const router = useRouter();
 	const dispatch = useAppDispatch();
 	const params = useParams();
 	const showId = params.showId as string;
+	const { status: tabStatus } = useTabSync();
 
 	const {
 		status,
@@ -181,6 +184,10 @@ export default function QueuePage() {
 				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
 			</div>
 		);
+	}
+
+	if (tabStatus === 'blocked') {
+		return <TabBlockOverlay />;
 	}
 
 	if (status === 'ERROR') {

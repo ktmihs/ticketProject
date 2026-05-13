@@ -11,6 +11,8 @@ import {
 	setQuantity,
 } from '@/store/purchaseSlice';
 import { resetQueue } from '@/store/queueSlice';
+import { useTabSync } from '@/hooks/useTabSync';
+import { TabBlockOverlay } from '@/components/TabBlockOverlay';
 
 type PaymentMethod = 'card' | 'bank';
 
@@ -44,9 +46,12 @@ function CheckoutPage() {
 		useAppSelector(state => state.purchase);
 	const { allowedUntil } = useAppSelector(state => state.queue);
 
+	const { status: tabStatus, release: releaseTab } = useTabSync();
+
 	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
 	const [queueRemainingSeconds, setQueueRemainingSeconds] = useState(0);
 
+	if (tabStatus === 'blocked') return <TabBlockOverlay />;
 	if (!selectedShow) return null;
 
 	// 구매 가능 시간 타이머
@@ -129,6 +134,7 @@ function CheckoutPage() {
 				).unwrap();
 			}
 
+			releaseTab();
 			router.push('/success');
 		} catch (err: any) {
 			if (selectedShow.seatType === 'reserved') {

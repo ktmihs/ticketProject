@@ -10,6 +10,8 @@ import {
 	setQuantity,
 } from '@/store/purchaseSlice';
 import { useSeats } from '@/hooks/useQueries';
+import { useTabSync } from '@/hooks/useTabSync';
+import { TabBlockOverlay } from '@/components/TabBlockOverlay';
 import type { Seat } from '@/types';
 
 // =====================================================
@@ -61,11 +63,13 @@ function PurchasePage() {
 	const params = useParams();
 	const dispatch = useAppDispatch();
 	const showId = params.showId as string;
+	const { status: tabStatus } = useTabSync();
 
 	const { selectedShow, selectedSeat, quantity } = useAppSelector(
 		state => state.purchase,
 	);
 
+	if (tabStatus === 'blocked') return <TabBlockOverlay />;
 	if (!selectedShow) return null;
 
 	const { allowedUntil } = useAppSelector(state => state.queue);
