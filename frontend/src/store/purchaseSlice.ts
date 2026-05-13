@@ -97,10 +97,12 @@ const purchaseSlice = createSlice({
 		},
 		proceedToPayment: state => {
 			state.stage = 'PAYMENT';
+			state.error = null;
 		},
 		returnToSeatSelect: state => {
 			state.stage = 'SEAT_SELECT';
 			state.selectedSeat = null;
+			state.error = null;
 		},
 		expireHold: state => {
 			state.stage = 'SEAT_SELECT';
