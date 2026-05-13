@@ -17,6 +17,7 @@ const {
 	errorHandler,
 	notFoundHandler,
 } = require('./middleware/error.middleware');
+const { validateOrigin } = require('./middleware/csrf.middleware');
 
 const app = express();
 
@@ -38,6 +39,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Cookie Parser
 app.use(cookieParser());
+
+// CSRF Protection (Origin/Referer 헤더 검증)
+app.use(validateOrigin);
 
 // Request Logging (개발 환경)
 if (config.nodeEnv === 'development') {

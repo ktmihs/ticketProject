@@ -5,7 +5,7 @@ const config = require('../config');
 const COOKIE_OPTIONS = {
 	httpOnly: true,
 	secure: config.nodeEnv === 'production',
-	sameSite: 'lax',
+	sameSite: 'strict',
 	path: '/',
 };
 
