@@ -21,6 +21,10 @@ export default {
 			return handleCORS(origin);
 		}
 
+		// CSRF 방어: 상태 변경 요청에 대해 Origin 헤더 검증
+		const csrfError = validateRequestOrigin(request.method, requestOrigin, allowedOrigins);
+		if (csrfError) return csrfError;
+
 		const response = await handleRequest(request, env, url);
 
 		// 모든 응답에 CORS 헤더 추가
@@ -101,6 +105,23 @@ async function handleRequest(request: Request, env: Env, url: URL): Promise<Resp
 		body: ['GET', 'HEAD'].includes(request.method) ? null : request.body,
 	});
 	return fetch(proxied);
+}
+
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+/**
+ * CSRF 방어: 상태 변경 요청의 Origin 헤더 검증
+ * Origin이 있고 허용 목록에 없으면 403 반환, 없으면 통과 (서버 간 요청 허용)
+ */
+function validateRequestOrigin(method: string, origin: string, allowedOrigins: string[]): Response | null {
+	if (SAFE_METHODS.has(method)) return null;
+	if (!origin) return null;
+	if (allowedOrigins.includes(origin)) return null;
+
+	return new Response(JSON.stringify({ error: { code: 'FORBIDDEN', message: '허용되지 않은 요청 출처입니다' } }), {
+		status: 403,
+		headers: { 'Content-Type': 'application/json' },
+	});
 }
 
 function isCacheable(pathname: string): boolean {
