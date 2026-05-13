@@ -331,6 +331,37 @@ class RedisService {
 		await this.client.del(lockKey);
 	}
 
+	// ==================== 활성 세션 관리 ====================
+
+	/**
+	 * 사용자 활성 구매 세션 등록
+	 * ALLOWED 상태 진입 시 호출 — 다른 기기의 중복 진입 차단에 사용
+	 * @param {string} userId
+	 * @param {number} ttlSeconds - ALLOWED 만료 시간과 동일하게 설정
+	 */
+	async setActiveSession(userId, ttlSeconds = 600) {
+		await this.client.set(`session:active:${userId}`, '1', 'EX', ttlSeconds);
+	}
+
+	/**
+	 * 활성 구매 세션 존재 여부 확인
+	 * @param {string} userId
+	 * @returns {Promise<boolean>}
+	 */
+	async hasActiveSession(userId) {
+		const result = await this.client.get(`session:active:${userId}`);
+		return result !== null;
+	}
+
+	/**
+	 * 활성 구매 세션 해제
+	 * 구매 완료 또는 이탈 시 호출
+	 * @param {string} userId
+	 */
+	async clearActiveSession(userId) {
+		await this.client.del(`session:active:${userId}`);
+	}
+
 	// ==================== 유틸리티 ====================
 
 	/**
